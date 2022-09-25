@@ -39,7 +39,7 @@ ALLOWED_HOSTS = ["*"]
 
 THIRD_APPS = ()
 
-LOCAL_APPS = ()
+LOCAL_APPS = ("tasks.apps",)
 
 DJANGO_APPS = (
     "django.contrib.admin",
