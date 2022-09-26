@@ -1,7 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.http import HttpResponse
+from django.contrib.auth import login
+from django.urls import reverse
+from django.db import IntegrityError
 
 
 def home(request):
@@ -21,9 +23,10 @@ def signup(request):
                 user = User.objects.create_user(
                     username=request.POST['username'], password=request.POST['password1'])
                 user.save()
-                return HttpResponse('user created successfully')
+                login(request, user)
+                return redirect(reverse('main:tasks'))
 
-            except:
+            except IntegrityError:
                 return render(request, 'tasks/signup.html', {
                     'form': UserCreationForm,
                     'error': 'user already exist'
@@ -33,3 +36,7 @@ def signup(request):
             'form': UserCreationForm,
             'error': 'password do not match'
         })
+
+
+def tasks(request):
+    return render(request, 'tasks/tasks.html')
