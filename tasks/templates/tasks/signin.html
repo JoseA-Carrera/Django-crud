@@ -1,0 +1,14 @@
+{% extends 'tasks/base.html' %}
+{% block content %}
+
+<h1>signin page</h1>
+
+{{ error }}
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button>signin</button>
+</form>
+
+
+{% endblock content %}

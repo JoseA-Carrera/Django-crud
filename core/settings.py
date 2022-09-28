@@ -32,14 +32,14 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = os.environ.get("DEBUG")  # -> True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = []
 
 
 # Application definition
 
 THIRD_APPS = ()
 
-LOCAL_APPS = ("tasks.apps",)
+LOCAL_APPS = ("tasks.apps.TasksConfig",)
 
 DJANGO_APPS = (
     "django.contrib.admin",
@@ -51,6 +51,7 @@ DJANGO_APPS = (
 )
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_APPS
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
