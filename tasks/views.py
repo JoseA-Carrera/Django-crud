@@ -1,9 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from .forms import TaskForm
+from .models import Task
+from django.utils import timezone
 
 
 def home(request):
@@ -39,7 +41,11 @@ def signup(request):
 
 
 def tasks(request):
-    return render(request, 'tasks/tasks.html')
+    task = Task.objects.filter(user=request.user, datecompleted__isnull=True)
+
+    return render(request, 'tasks/tasks.html', {
+        'tasks': task
+    })
 
 
 def create_tasks(request):
@@ -48,14 +54,54 @@ def create_tasks(request):
             'form': TaskForm
         })
     else:
-        print(request.POST)
-        return render(request, 'tasks/create_task.html', {
-            'form': TaskForm
-        })
+        try:
+            print(request.POST)
+            form = TaskForm(request.POST)
+            new_task = form.save(commit=False)
+            new_task.user = request.user
+            new_task.save()
+            return redirect('tasks')
+
+        except ValueError:
+            return render(request, 'tasks/create_task.html', {
+                'form': TaskForm,
+                'error': 'Please provide a valide data'
+            })
+
+
+def tasks_detail(request, task_id):
+    if request.method == 'GET':
+        task = get_object_or_404(Task, pk=task_id, user=request.user)
+        form = TaskForm(instance=task)
+        return render(request, 'tasks/tasks_detail.html', {'task': task, 'form': form})
+    else:
+        try:
+            task = get_object_or_404(Task, pk=task_id, user=request.user)
+            form = TaskForm(request.POST, instance=task)
+            form.save()
+            return redirect('tasks')
+        except ValueError:
+            return render(request, 'tasks/tasks_detail.html', {'task': task, 'form': form, 'error': 'Error updating task'})
+
+
+def complete_task(request, task_id):
+    task = get_object_or_404(Task, pk=task_id, user=request.user)
+    if request.method == 'POST':
+        task.datecompleted = timezone.now()
+        task.save()
+        return redirect('tasks')
+
+
+def delete_task(request, task_id):
+    task = get_object_or_404(Task, pk=task_id, user=request.user)
+    if request.method == 'POST':
+        task.delete()
+        return redirect('tasks')
 
 
 def signout(request):
     logout(request)
+
     return redirect('home')
 
 
@@ -76,3 +122,10 @@ def signin(request):
         else:
             login(request, user)
             return redirect('tasks')
+
+
+def tasks_completed(request):
+    task = Task.objects.filter(
+        user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
+
+    return render(request, 'tasks/tasks.html', {'tasks': task})
