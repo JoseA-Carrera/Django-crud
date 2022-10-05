@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from .forms import TaskForm
 from .models import Task
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 
 
 def home(request):
@@ -33,6 +34,11 @@ def signup(request):
                     'form': UserCreationForm,
                     'error': 'user already exist'
                 })
+            except ValueError:
+                return render(request, 'tasks/signup.html', {
+                    'form': UserCreationForm,
+                    'error': 'Put valid values'
+                })
 
         return render(request, 'tasks/signup.html', {
             'form': UserCreationForm,
@@ -40,6 +46,7 @@ def signup(request):
         })
 
 
+@login_required
 def tasks(request):
     task = Task.objects.filter(user=request.user, datecompleted__isnull=True)
 
@@ -48,6 +55,7 @@ def tasks(request):
     })
 
 
+@login_required
 def create_tasks(request):
     if request.method == 'GET':
         return render(request, 'tasks/create_task.html', {
@@ -69,6 +77,7 @@ def create_tasks(request):
             })
 
 
+@login_required
 def tasks_detail(request, task_id):
     if request.method == 'GET':
         task = get_object_or_404(Task, pk=task_id, user=request.user)
@@ -84,6 +93,7 @@ def tasks_detail(request, task_id):
             return render(request, 'tasks/tasks_detail.html', {'task': task, 'form': form, 'error': 'Error updating task'})
 
 
+@login_required
 def complete_task(request, task_id):
     task = get_object_or_404(Task, pk=task_id, user=request.user)
     if request.method == 'POST':
@@ -92,6 +102,7 @@ def complete_task(request, task_id):
         return redirect('tasks')
 
 
+@login_required
 def delete_task(request, task_id):
     task = get_object_or_404(Task, pk=task_id, user=request.user)
     if request.method == 'POST':
@@ -99,6 +110,7 @@ def delete_task(request, task_id):
         return redirect('tasks')
 
 
+@login_required
 def signout(request):
     logout(request)
 
@@ -124,6 +136,7 @@ def signin(request):
             return redirect('tasks')
 
 
+@login_required
 def tasks_completed(request):
     task = Task.objects.filter(
         user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
